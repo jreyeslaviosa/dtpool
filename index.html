@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Detroit Pools Assembly</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a builder's set, calm and exact; instructions, not marketing
+   IDEA: a product configurator for a build: the pool floats on a soft stage, the build plays out step by step
+   PICTURE: full-screen 3D model with soft shadows; glass panels hold the step, the part and the step dock
+   COLOUR and TYPE: graphite or soft grey stage, timber, black liner, water blue, datum red; Inter Tight + Inter
+   LAYOUT: stage first (title top left, views top right, step panel right, dock bottom), then sequence, cut list, materials */
+:root{color-scheme:light dark;
+--bg:light-dark(#f4f5f7,#0e1114);--ink:light-dark(#12171c,#eef1f4);--mute:light-dark(#646d77,#8f9aa5);
+--line:light-dark(rgba(18,23,28,.12),rgba(255,255,255,.1));--glass:light-dark(rgba(255,255,255,.74),rgba(22,27,32,.74));
+--chip:light-dark(rgba(18,23,28,.055),rgba(255,255,255,.07));--s1:light-dark(#ffffff,#1d242b);--s2:light-dark(#dfe3e8,#0b0e11);
+--card:light-dark(#ffffff,#161b20);--tim:#d4b483;--water:#4fa3c2;--red:#e5533d;
+--shadow:0 1px 1px rgba(0,0,0,.04),0 12px 32px light-dark(rgba(20,30,40,.12),rgba(0,0,0,.45))}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Inter,system-ui,sans-serif;overflow-x:clip;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.num{font-family:"Inter Tight",Inter,sans-serif;letter-spacing:-.02em}
+button,.seg label{font:500 14px/1 Inter,system-ui,sans-serif;min-height:44px;padding:0 16px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--ink);cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+button:hover{border-color:var(--mute)}
+button:focus-visible,.seg input:focus-visible+span{outline:2px solid var(--red);outline-offset:2px}
+button:disabled{opacity:.35;cursor:default}
+button.on,button.on:hover{background:var(--ink);color:var(--bg)}
+.glass{background:var(--card);border:1px solid var(--line);border-radius:14px}
+
+/* stage */
+.stage{position:relative;height:min(100svh,940px);min-height:620px;background:var(--bg);overflow:hidden}
+.view{position:absolute;inset:0;touch-action:none}
+.view canvas{display:block;width:100%;height:100%}
+.top{position:absolute;left:28px;right:28px;top:24px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;pointer-events:none}
+.top>*{pointer-events:auto}
+.kick{font-size:13px;font-weight:500;color:var(--mute)}
+h1{font-size:clamp(26px,2.6vw,36px);line-height:1.1;margin:4px 0 6px;font-weight:600;text-wrap:balance}
+.lede{margin:0;color:var(--mute);font-size:15px;max-width:44ch}
+.presets{display:flex;padding:3px;gap:2px;flex:none}
+.presets button{border:0;min-height:38px;padding:0 12px;border-radius:10px}
+.presets button.on{background:var(--ink);color:var(--bg)}
+.side{position:absolute;right:28px;top:150px;width:360px;display:grid;gap:12px}
+.panel{padding:20px 20px 18px}
+.chiprow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.pill{font-size:13px;font-weight:500;color:var(--mute);white-space:nowrap}
+.num{font-size:13px;font-weight:600;color:var(--mute)}
+.step h2{font-size:22px;line-height:1.2;margin:0 0 6px;font-weight:600}
+.step p{margin:0;color:var(--mute);font-size:15px}
+.nav{display:flex;gap:8px;margin-top:16px}.nav button{flex:1}
+.nav #next{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.part b{display:block;font-size:15px;font-weight:600;margin-bottom:2px}.part span{font-size:14px;color:var(--mute)}
+.dock{position:absolute;left:28px;right:28px;bottom:24px;padding:16px 18px;display:grid;gap:12px}
+.cur{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}.cur b{font-size:16px;font-weight:600}.cur #sdesc{font-size:14px;color:var(--mute);flex:1 1 320px}
+.part{font-size:14px;padding:8px 12px;border-radius:8px;background:var(--chip)}.part b{display:inline;font-size:14px}.part span{color:var(--mute)}
+.track .phases,.track .ticks{display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:4px}
+.phases div{font-size:12px;font-weight:500;color:var(--mute);padding:0 1px 4px;white-space:nowrap;overflow:hidden}
+.phases div.cur{color:var(--ink)}
+.phases .sh{display:none}
+.ticks button{min-height:36px;padding:12px 0 0;border:0;border-radius:0;font-size:12px;font-weight:500;color:var(--mute);position:relative}
+.ticks button::before{content:"";position:absolute;left:0;right:0;top:2px;height:4px;border-radius:2px;background:var(--line)}
+.ticks button.done::before{background:var(--ink)}
+.ticks button.w::before{background:color-mix(in srgb,var(--water) 35%,transparent)}
+.ticks button.w.done::before{background:var(--water)}
+.ticks button.now{color:var(--ink);font-weight:700}.ticks button.now::before{background:var(--red);top:0;height:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tools .sp{flex:1}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg label{display:inline-flex;align-items:center;border:0;border-radius:8px;min-height:36px;padding:0 12px}
+.seg input{position:absolute;opacity:0}
+.seg label:has(input:checked){background:var(--ink);color:var(--bg)}
+.hint{font-size:13px;color:var(--mute)}
+.wl{position:absolute;pointer-events:none;font-size:13px;font-weight:600;background:var(--water);color:#fff;padding:5px 9px;border-radius:6px;white-space:nowrap;transform:translate(-50%,-100%);margin-top:-12px}
+.wl::after{content:"";position:absolute;left:50%;bottom:-5px;width:10px;height:10px;background:var(--water);transform:translateX(-50%) rotate(45deg);border-radius:2px}
+
+/* below */
+.band{padding:clamp(36px,5vw,72px) max(4vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+h3{font-size:26px;margin:0 0 6px;font-weight:700}
+.sec{margin-bottom:18px;color:var(--mute);margin-top:0}
+.cards{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;margin-top:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 22px 14px}
+.card h4{font:600 17px/1.3 "Inter Tight",Inter,sans-serif;margin:0 0 10px}
+ol.steps{padding:0;margin:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+ol.steps li{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:12px;background:var(--card);border:1px solid var(--line);cursor:pointer;transition:border-color .2s,transform .2s}
+ol.steps li:hover{transform:translateY(-1px)}
+ol.steps li span{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:600;background:var(--chip);color:var(--mute)}
+ol.steps li.cur{border-color:var(--ink)}ol.steps li.cur span{background:var(--ink);color:var(--bg)}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th{text-align:left;padding:10px 8px;font-size:13px;font-weight:600;color:var(--mute);border-bottom:1px solid var(--line)}
+td{padding:11px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+tr.new td:first-child::after{content:"new";margin-left:8px;font-size:12px;font-weight:500;color:var(--red)}
+.small{font-size:13px;color:var(--mute)}
+pre,.scroll{overflow-x:auto}
+
+@media(max-width:980px){
+ .stage{height:auto;min-height:0;background:none}
+ .view{position:relative;height:62svh;min-height:380px}
+ .top{left:16px;right:16px;top:16px}.lede{display:none}
+ .dock{position:static;width:auto;margin:12px 16px 0}
+ .dock{margin-bottom:0}
+}
+@media(max-width:820px){.cards{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:640px){
+ .top{flex-direction:column}.presets{align-self:stretch}.presets button{flex:1;padding:0 8px}
+ .phases div{font-size:11px}.phases .lg{display:none}.phases .sh{display:inline}
+ .ticks button{font-size:12px;border-radius:7px}.track .phases,.track .ticks{gap:3px}
+ table{font-size:13px}
+ .stack thead,.stack tr:has(th){display:none}.stack tr{display:grid;padding-block:10px}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;white-space:normal;color:var(--mute)}.stack td:empty{display:none}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
+</head><body>
+<header class="stage">
+ <div class="view" id="viewer"><div class="wl" id="wl" hidden></div></div>
+ <div class="top">
+  <div><div class="kick">MAD Detroit · Rev P04 · one of two identical pools</div><h1>How the pool goes together</h1><p class="lede">13 steps from bare floor to water. Drag to orbit, scroll to zoom, click any part.</p></div>
+  <div class="presets glass" role="group" aria-label="Camera views"><button data-cam="overview" class="on">Overview</button><button data-cam="corner">Corner</button><button data-cam="section">Section A-A</button></div>
+ </div>
+ <div class="dock glass">
+  <div class="cur"><span class="num">Step <span id="num">0</span></span><b id="stitle"></b><span id="sdesc"></span></div>
+  <div class="part" id="card" hidden><b id="pName"></b> <span id="pMeta"></span></div>
+  <div class="track" role="group" aria-label="Assembly steps"><div class="phases" id="phases"></div><div class="ticks" id="ticks"></div></div>
+  <div class="tools">
+   <button id="bExplode" aria-pressed="false">Exploded view</button>
+   <button id="bSection" aria-pressed="false">Cut at A-A</button>
+   <button id="bDatum" aria-pressed="true" class="on">Level datum</button>
+   <span class="sp"></span>
+   <div class="seg" role="radiogroup" aria-label="Units"><label><input type="radio" name="u" value="m" checked><span>Metric</span></label><label><input type="radio" name="u" value="i"><span>Imperial</span></label></div>
+  </div>
+ </div>
+</header>
+<main class="band"><div class="wrap">
+ <h3>Build sequence</h3><p class="sec">Click a step to jump to it in the model. Drawn on a level floor; on site the cap is set level to the laser datum and the wall tapers where the floor falls (sheet 02).</p>
+ <ol class="steps" id="steps"></ol>
+ <div class="cards">
+  <div class="card"><h4>Timber cut list, one pool</h4><div class="scroll"><table id="cut"></table></div>
+   <h4 style="margin-top:22px">Wall assemblies</h4><table class="stack" id="asm"></table><p class="small" id="netline"></p></div>
+  <div class="card"><h4>Materials, one pool</h4><table class="stack" id="mat"></table></div>
+ </div>
+ <p class="small" style="margin-top:28px">Preliminary, for builder review. Fixings, floor capacity and connections by the structural designer. Clear inside 700 x 400 cm matches the projection image.</p>
+</div></main>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+{
+const U = {u:'m'};
+const STEPS = [
+ {t:['Survey and set the datum','Survey and shoot the datum'],d:['Laser-level the floor on a 50 cm grid inside the reinforced zone. Shoot the level datum (red): it becomes the top of the cap.','Shoot floor elevations on a 20" grid inside the reinforced zone. Laser datum (red) = top of cap.']},
+ {t:['Floor protection and rubber isolation','Floor protection and rubber isolation'],d:['Floor-finish protection, then 10-20 mm recycled-rubber underlay over the whole base area. If the survey shows more than 2 cm fall, tapered sleepers at max 40 cm centres go here.','Floor-finish protection, then 3/8" to 3/4" recycled-rubber underlay, full base area. Survey shows more than 3/4" fall: tapered sleepers @ 16" O.C. max.']},
+ {t:['Plywood base, layer 1','Ply base, layer 1'],d:['19 mm structural exterior plywood, 122 x 244 cm sheets, laid tight and supported everywhere.','3/4" structural ext. ply, 4x8 sheets, laid tight. Full bearing.']},
+ {t:['Plywood base, layer 2','Ply base, layer 2'],d:['Second layer with joints offset from layer 1. Fastening schedule by structural.','Second layer, joints offset 24" min. from layer 1. Fastening by structural.']},
+ {t:['Inner timber ply A','Inner ply A'],d:['38.1 mm boards on edge, ripped to 100.95 mm at the floor\'s highest point. Long walls run through; end walls fit between.','2x6 on edge, ripped to 4" at floor high point. Long walls run through; end walls fit between.']},
+ {t:['Outer timber ply B','Outer ply B'],d:['Long walls run through; end walls fit between. Splices land about 60 cm from the ply A splices. Fix the plies face to face.','Long walls run through; end walls fit between. Splices offset 24" from ply A. Fasten plies face to face.']},
+ {t:['Wall-to-base angles','Wall-to-base angles'],d:['Rated angles tie the timber core to the base. Size and spacing by structural; the ones shown are placeholders.','Rated angle clips, core to base. Size and spacing by structural; shown as placeholders.']},
+ {t:['Inner face plywood','Inner face ply'],d:['19 mm exterior plywood on the basin side of the core. Round and smooth every liner-facing edge.','3/4" ext. ply on basin side of core. Ease all liner-side edges.']},
+ {t:['Cap, set to the datum','Cap, set to datum'],d:['19 mm plywood cap, 15 cm wide, top set level to the laser datum. Minimum 12 cm above the basin bottom at the floor\'s highest point.','3/4" ply cap x 6" wide, top set to laser datum. Min. 4 3/4" above basin bottom at floor high point.']},
+ {t:['Outer finish (optional)','Outer finish (opt.)'],d:['12.7 mm plywood on the outside face. Secure the cap before lining.','1/2" ply on outside face. Fasten cap before lining.']},
+ {t:['Underlay, backup liner, separator','Underlay, backup liner, separator'],d:['Underlay, then the backup liner, then the separator. Both liners run over the cap to the dry outer edge. Leak sensor sits between the liners.','Underlay, backup liner, separator. Both liners lap over cap to dry outer edge. Leak sensor between liners.']},
+ {t:['Primary liner','Primary liner'],d:['Black EPDM, about 1.14 mm, one piece 8.23 x 5.18 m. Pleat each corner flat against the end wall (detail D4). Terminate on the dry outer face. Mark the operating water line (dashed blue).','45 mil black EPDM, one pc 27\' x 17\'. Pleat corners flat against end wall (D4). Terminate on dry outer face. Mark operating water line (dashed blue).']},
+ {t:['Fill to the mark','Fill to mark'],d:['Fill to 6.5 cm at the floor\'s highest point, leaving 5.5 cm below the rim. Pump and hose on hand.','Fill to 2 1/2" at floor high point; 2 1/4" freeboard. Pump and hose on hand.']},
+];
+const CUT = {m:{h:['Mark','Cut length','Qty','Stock'],r:[['T1','2400 mm',8,'2438 mm'],['T2','2314.3 mm',4,'2438 mm'],['T3','1800 mm',4,'2438 mm'],['T4','2990.5 mm',2,'3048 mm'],['T5','1638.1 mm',2,'2438 mm']]},
+ i:{h:['Mark','Cut length','Qty','Stock'],r:[['T1','94 1/2"',8,"2x6 x 8'"],['T2','91 1/16"',2,"2x6 x 8'"],['T3','70 1/2"',4,"2x6 x 8'"],['T4','118 1/16"',2,"2x6 x 10'"],['T5','64 1/2"',2,"2x6 x 8'"],['T6','91 1/2"',2,"2x6 x 8'"]]}};
+const ASM = {m:[['A / inner long wall','T1 + T1 + T2','711.43 cm'],['B / outer long wall','T3 + T1 + T4','719.05 cm'],['A / inner end wall','T1 + T5','403.81 cm'],['B / outer end wall','T3 + T2','411.43 cm']],
+ i:[['A / inner long wall','T1 + T1 + T2',`23'-4 1/16"`],['B / outer long wall','T3 + T1 + T4',`23'-7 1/16"`],['A / inner end wall','T1 + T5',`13'-3"`],['B / outer end wall','T3 + T6',`13'-6"`]]};
+const NET = {m:'Net timber 44.91 m per pool, two of each wall. Rip height per floor survey.',i:'Net lumber 147 lf per pool, (2) of each wall. Rip ht. per floor survey.'};
+const MAT = {m:[['38.1 x 139.7 mm timber, 2438 mm','20'],['38.1 x 139.7 mm timber, 3048 mm','2'],['19 mm structural ext. plywood, base','26 sheets'],['19 mm ext. plywood, inner faces + caps','3 sheets'],['13 mm plywood, outer finish','2 sheets'],['Black EPDM primary liner, ~1.14 mm','8.23 x 5.18 m'],['Backup liner, same','1'],['Underlay + separator','95 m²'],['Floor-finish protection','35 m²'],['Rubber isolation underlay, 10-20 mm','35 m²',1],['Tapered sleepers, if survey needs them','after survey',1],['Liner termination battens','25 m'],['Leak detector between liners','1'],['Water treatment, filter / UV','1',1],['Submersible pump + hose','1 set',1]],
+ i:[["2x6 x 8'",'20 pcs'],["2x6 x 10'",'2 pcs'],['3/4" structural ext. ply 4x8, base','26 sht'],['3/4" ext. ply 4x8, faces + caps','3 sht'],['1/2" ply 4x8, outer finish','2 sht'],['45 mil black EPDM primary liner',"27' x 17'"],['Backup liner, same','1 pc'],['Underlay + separator','1,020 sf'],['Floor-finish protection','375 sf'],['Rubber isolation underlay, 3/8" to 3/4"','375 sf',1],['Tapered sleepers, if survey req\'s','after survey',1],['Liner termination battens','82 lf'],['Leak detector between liners','1'],['Water treatment, filter / UV','1',1],['Submersible pump + hose','1 set',1]]};
+const PHASES = [['Prep',0,1,'Prep'],['Base',2,3,'Base'],['Walls',4,9,'Walls'],['Liners',10,11,'Liner'],['Water',12,12,'Fill']];
+const WL = {m:'Water line · 6.5 cm deep · 5.5 cm below rim', i:'Water line · 2 1/2" deep · 2 1/4" below rim'};
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// ---------------------------------------------------------------- scene
+const host = document.getElementById('viewer');
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setClearColor(0x000000, 0);
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.NoToneMapping;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+host.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(35, 1, 1, 6000);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.495;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8780, 0.72));
+const sun = new THREE.DirectionalLight(0xffffff, 0.62); sun.position.set(260, 520, 330); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, {left:-480, right:480, top:320, bottom:-320, near:100, far:1400}); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.4;
+scene.add(sun);
+const fill = new THREE.DirectionalLight(0xffffff, 0.25); fill.position.set(-400, 200, -300); scene.add(fill);
+const clip = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
+
+const C = {tim:0xc9ad85, timB:0xbba078, ply:0xd3bf9e, ply2:0xc5b090, face:0xddd0b8, rub:0x6b6e72, liner:0x23272b, backup:0x7a838c, water:0x6aa9c1, ang:0x8d959c, floor:0xb4b1ab};
+const mats = {};
+function mat(key, extra = {}) {
+  if (!mats[key]) { mats[key] = new THREE.MeshStandardMaterial(Object.assign({color:C[key], side:THREE.DoubleSide, roughness:1, metalness:0}, extra)); mats[key].color.convertSRGBToLinear(); }
+  return mats[key];
+}
+const edgeMat = new THREE.LineBasicMaterial({color:0x2a3138, transparent:true, opacity:0.28});
+const selMat = new THREE.LineBasicMaterial({color:0xe5533d});
+const groups = [], pickables = [];
+function group(step, ex) { const g = new THREE.Group(); g.userData = {step, ex, cur:new THREE.Vector3()}; scene.add(g); groups.push(g); return g; }
+const secFaces = [];
+function box(g, x0, x1, y0, y1, z0, z1, mk, info, edges = true) {
+  [x0, x1] = [Math.min(x0, x1), Math.max(x0, x1)]; [y0, y1] = [Math.min(y0, y1), Math.max(y0, y1)]; [z0, z1] = [Math.min(z0, z1), Math.max(z0, z1)];
+  const geo = new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0);
+  const m = new THREE.Mesh(geo, mat(mk));
+  m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+  m.userData.info = info; m.castShadow = true; m.receiveShadow = true;
+  if (edges) { const e = new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat); m.add(e); m.userData.edge = e; }
+  if (z0 < 0 && z1 > 0) {
+    const c = new THREE.Color(C[mk]).multiplyScalar(0.72).convertSRGBToLinear();
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, y1 - y0), new THREE.MeshBasicMaterial({color:c, side:THREE.DoubleSide}));
+    f.position.z = -(z0 + z1) / 2 - 0.03; f.visible = false; m.add(f); secFaces.push(f);
+    const fe = new THREE.LineSegments(new THREE.EdgesGeometry(f.geometry), new THREE.LineBasicMaterial({color:0x1d2730})); f.add(fe);
+  }
+  g.add(m); pickables.push(m); return m;
+}
+
+// dimensions (cm)
+const HL = 350, HW = 200, F = 1.905, P = 3.81, FIN = 1.27;
+const RUB = 1.5, B1 = RUB + 1.905, B2 = B1 + 1.905, CORE = 10.095, TOP = B2 + CORE, CAP = TOP + 1.905;
+const baseHX = HL + 20.795, baseHZ = HW + 20.795;
+const ftin = cm => { let t = Math.round(cm / 2.54 * 16), ft = Math.floor(t / 192); t -= ft * 192; let w = Math.floor(t / 16), f = t % 16, fr = ''; if (f) { let n = f, d = 16; while (n % 2 === 0) { n /= 2; d /= 2; } fr = ` ${n}/${d}`; } return (ft ? `${ft}'-` : '') + `${w}${fr}"`; };
+
+// floor (always on)
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(2400, 2400), new THREE.ShadowMaterial({opacity:0.22}));
+floor.rotation.x = -Math.PI / 2; floor.position.y = -0.05; floor.receiveShadow = true; scene.add(floor);
+const grid = new THREE.GridHelper(1600, 32, 0x8a8f96, 0x8a8f96); grid.material.transparent = true; grid.material.opacity = 0.12; grid.material.depthWrite = false; scene.add(grid);
+
+// step 0: datum ring (laser) — also toggled
+const datum = new THREE.Group(); scene.add(datum);
+{
+  const r = 380, q = 230, y = CAP + 0.05;
+  const pts = [[-r,-q],[r,-q],[r,q],[-r,q],[-r,-q]].map(([x,z]) => new THREE.Vector3(x, y, z));
+  datum.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({color:0xc0392b, dashSize:12, gapSize:6})));
+  datum.children[0].computeLineDistances();
+  const tripod = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, CAP, 16), new THREE.MeshStandardMaterial({color:0xd8432e, roughness:0.4}));
+  tripod.position.set(-r - 40, CAP / 2, -q - 40); datum.add(tripod);
+}
+
+const I = (name, step, m, i) => ({name, step, m, i});
+// 1 rubber
+{ const g = group(1, [0, 0, 0]);
+  box(g, -baseHX, baseHX, 0, RUB, -baseHZ, baseHZ, 'rub', I('Rubber isolation underlay', 1, '10-20 mm recycled rubber over floor protection, 741.59 x 441.59 cm', '3/8" to 3/4" recycled rubber over floor protection, 24\'-4 1/16" x 14\'-6"')); }
+// 2-3 plywood sheets, staggered
+function sheets(step, y0, y1, offx, offz, mk, label) {
+  const g = group(step, [0, step === 2 ? 14 : 28, 0]);
+  for (let x = -baseHX - offx; x < baseHX; x += 244) for (let z = -baseHZ - offz; z < baseHZ; z += 122) {
+    const x0 = Math.max(x, -baseHX), x1 = Math.min(x + 244, baseHX), z0 = Math.max(z, -baseHZ), z1 = Math.min(z + 122, baseHZ);
+    if (x1 - x0 < 1 || z1 - z0 < 1) continue;
+    const full = x1 - x0 > 243.9 && z1 - z0 > 121.9;
+    box(g, x0, x1, y0, y1, z0, z1, mk, I(label, step, `19 mm structural exterior plywood, ${full ? 'full 122 x 244 cm sheet' : `cut to ${(x1-x0).toFixed(1)} x ${(z1-z0).toFixed(1)} cm`}`, `3/4" structural ext. ply, ${full ? 'full 4x8 sheet' : `cut to approx. ${ftin(x1-x0)} x ${ftin(z1-z0)}`}`));
+  }
+}
+sheets(2, RUB, B1, 0, 0, 'ply', 'Base plywood, layer 1');
+sheets(3, B1, B2, 122, 61, 'ply2', 'Base plywood, layer 2');
+
+// 4-5 timber plies with splices
+function run(g, axis, fixed, start, pieces, mk, ply, wall, step) {
+  let s = start;
+  pieces.forEach(([len, mm, ii]) => {
+    const e = s + len;
+    const [x0, x1, z0, z1] = axis === 'x' ? [s, e, fixed - P / 2, fixed + P / 2] : [fixed - P / 2, fixed + P / 2, s, e];
+    box(g, x0, x1, B2, TOP, z0, z1, mk, I(`Ply ${ply}, ${wall}: ${mm.split(' ')[0]}`, step, `38.1 mm timber on edge, ${mm}, ripped to 100.95 mm at the floor's highest point`, `2x6 on edge, ${ii}, ripped to 4" at floor high point`));
+    s = e;
+  });
+}
+const T = {T1:[240,'T1 · 2400 mm','T1 · 94 1/2"'],T2a:[231.43,'T2 · 2314.3 mm','T2 · 91 1/16"'],T2b:[231.43,'T2 · 2314.3 mm','T6 · 91 1/2"'],T3:[180,'T3 · 1800 mm','T3 · 70 1/2"'],T4:[299.05,'T4 · 2990.5 mm','T4 · 118 1/16"'],T5:[163.81,'T5 · 1638.1 mm','T5 · 64 1/2"']};
+{ const g = group(4, [0, 45, 0]);
+  const zA = HW + F + P / 2, xA = HL + F + P / 2, aL = HL + F + P;
+  for (const sg of [-1, 1]) {
+    run(g, 'x', sg * zA, -aL, [T.T1, T.T1, T.T2a], 'tim', 'A', sg < 0 ? 'long wall' : 'long wall', 4);
+    run(g, 'z', sg * xA, -(HW + F), [T.T1, T.T5], 'tim', 'A', 'end wall', 4);
+  } }
+{ const g = group(5, [0, 45, 0]); g.userData.out = 28;
+  const zB = HW + F + P + P / 2, xB = HL + F + P + P / 2, bL = HL + F + 2 * P;
+  for (const sg of [-1, 1]) {
+    run(g, 'x', sg * zB, -bL, [T.T3, T.T1, T.T4], 'timB', 'B', 'long wall', 5);
+    run(g, 'z', sg * xB, -(HW + F + P), [T.T3, T.T2b], 'timB', 'B', 'end wall', 5);
+  } }
+// 6 angles (placeholders)
+{ const g = group(6, [0, 45, 0]); g.userData.out = 52;
+  const o = HW + F + 2 * P + FIN, ox = HL + F + 2 * P + FIN;
+  const info = I('Wall-to-base angle (placeholder)', 6, 'Rated angle, timber core to base. Size, spacing and fasteners by structural.', 'Rated angle clip, core to base. Size, spacing and fasteners by structural.');
+  for (let x = -300; x <= 300; x += 100) for (const sg of [-1, 1]) {
+    box(g, x - 4, x + 4, B2, B2 + 0.3, sg * o, sg * (o + 5), 'ang', info);
+    box(g, x - 4, x + 4, B2, B2 + 5, sg * o, sg * (o + 0.3), 'ang', info);
+  }
+  for (let z = -150; z <= 150; z += 100) for (const sg of [-1, 1]) {
+    box(g, sg * ox, sg * (ox + 5), B2, B2 + 0.3, z - 4, z + 4, 'ang', info);
+    box(g, sg * ox, sg * (ox + 0.3), B2, B2 + 5, z - 4, z + 4, 'ang', info);
+  } }
+// 7 inner face
+{ const g = group(7, [0, 45, 0]); g.userData.out = -26;
+  const info = I('Inner face plywood', 7, '19.05 mm exterior plywood, 100.95 mm high at the floor\'s highest point. Round liner-facing edges.', '3/4" ext. ply, 4" high at floor high point. Ease liner-side edges.');
+  for (const sg of [-1, 1]) {
+    box(g, -HL - F, HL + F, B2, TOP, sg * HW, sg * (HW + F), 'face', info);
+    box(g, sg * HL, sg * (HL + F), B2, TOP, -HW, HW, 'face', info);
+  } }
+// 8 cap
+{ const g = group(8, [0, 70, 0]);
+  const info = I('Cap', 8, '19.05 mm plywood, 15 cm wide. Top set level to the laser datum: min. 12 cm above basin bottom at the floor\'s highest point.', '3/4" ply x 6" wide. Top set to laser datum: min. 4 3/4" above basin bottom at floor high point.');
+  for (const sg of [-1, 1]) {
+    box(g, -HL - 15, HL + 15, TOP, CAP, sg * HW, sg * (HW + 15), 'face', info);
+    box(g, sg * HL, sg * (HL + 15), TOP, CAP, -HW, HW, 'face', info);
+  } }
+// 9 outer finish
+{ const g = group(9, [0, 45, 0]); g.userData.out = 70;
+  const o = HW + F + 2 * P, ox = HL + F + 2 * P;
+  const info = I('Outer finish (optional)', 9, '12.7 mm plywood. Secure the cap before lining.', '1/2" ply, optional. Fasten cap before lining.');
+  for (const sg of [-1, 1]) {
+    box(g, -ox - FIN, ox + FIN, B2, TOP, sg * o, sg * (o + FIN), 'face', info);
+    box(g, sg * ox, sg * (ox + FIN), B2, TOP, -o, o, 'face', info);
+  } }
+// 10-11 liners: bottom, inner walls, over cap, down outer edge
+function liner(step, mk, inset, lift, info) {
+  const g = group(step, [0, step === 10 ? 95 : 115, 0]);
+  const t = 0.12, y0 = B2 + lift, yC = CAP + lift, hx = HL - inset, hz = HW - inset, cx = HL + 15 + inset, cz = HW + 15 + inset;
+  box(g, -hx, hx, y0, y0 + t, -hz, hz, mk, info, false);
+  for (const sg of [-1, 1]) {
+    box(g, -hx, hx, y0, yC, sg * hz, sg * (hz + t), mk, info, false);
+    box(g, sg * hx, sg * (hx + t), y0, yC, -hz, hz, mk, info, false);
+    box(g, -cx, cx, yC, yC + t, sg * hz, sg * cz, mk, info, false);
+    box(g, sg * hx, sg * cx, yC, yC + t, -hz, hz, mk, info, false);
+    box(g, -cx, cx, yC - 4, yC, sg * cz, sg * (cz + t), mk, info, false);
+    box(g, sg * cx, sg * (cx + t), yC - 4, yC, -cz, cz, mk, info, false);
+  }
+  return g;
+}
+liner(10, 'backup', 0.15, 0.1, I('Underlay, backup liner, separator', 10, 'Underlay, backup EPDM liner and separator. Both liners pass over the cap to the dry outer edge. Leak sensor between liners.', 'Underlay, backup EPDM liner and separator. Both liners lap over cap to dry outer edge. Leak sensor between liners.'));
+liner(11, 'liner', 0.35, 0.3, I('Primary liner', 11, 'Black EPDM, about 1.14 mm, one piece 8.23 x 5.18 m. Corners pleated flat against the end wall (D4).', '45 mil black EPDM, one pc 27\' x 17\'. Corners pleated flat against end wall (D4).'));
+// 12 water
+{ const g = group(12, [0, 140, 0]);
+  const w = box(g, -HL + 0.4, HL - 0.4, B2 + 0.45, B2 + 0.45 + 6.5, -HW + 0.4, HW - 0.4, 'water', I('Water', 12, '6.5 cm at the floor\'s highest point · about 1,820 L · 1,820 kg. 5.5 cm below the rim.', '2 1/2" at floor high point · approx. 470 gal · 3,920 lb. 2 1/4" freeboard.'), false);
+  w.material = new THREE.MeshStandardMaterial({color:new THREE.Color(C.water).convertSRGBToLinear(), transparent:true, opacity:0.6, roughness:1, metalness:0, side:THREE.DoubleSide}); w.castShadow = false; w.receiveShadow = false; }
+
+// operating water line (mark at 11, water surface edge at 12)
+const WTOP = B2 + 0.45 + 6.5;
+const wDash = new THREE.LineDashedMaterial({color:0x1fa3d6, dashSize:8, gapSize:5});
+const wSolid = new THREE.LineBasicMaterial({color:0x1fa3d6});
+const wline = new THREE.Line(new THREE.BufferGeometry().setFromPoints([[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]].map(([a, b]) => new THREE.Vector3(a * (HL - 0.3), WTOP, b * (HW - 0.3)))), wDash);
+wline.computeLineDistances(); scene.add(wline);
+const wlEl = document.getElementById('wl'), wlPt = new THREE.Vector3(-HL + 0.4, WTOP, -HW * 0.45), prj = new THREE.Vector3();
+
+// ---------------------------------------------------------------- state
+let step = 12, exploded = false, section = false, showDatum = true, sel = null;
+const ticksEl = document.getElementById('ticks'), phasesEl = document.getElementById('phases');
+phasesEl.innerHTML = PHASES.map(([n, a, b, sh]) => `<div style="grid-column:${a + 1} / ${b + 2}" title="${n}"><span class="lg">${n}</span><span class="sh">${sh}</span></div>`).join('');
+function sync() {
+  groups.forEach(g => g.visible = g.userData.step <= step);
+  datum.visible = showDatum || step === 0;
+  document.getElementById('num').textContent = step;
+  document.getElementById('stitle').textContent = STEPS[step].t[U.u === 'm' ? 0 : 1];
+  document.getElementById('sdesc').textContent = STEPS[step].d[U.u === 'm' ? 0 : 1];
+  ticksEl.querySelectorAll('button').forEach((b, i) => { b.classList.toggle('done', i <= step); b.classList.toggle('now', i === step); b.setAttribute('aria-current', i === step ? 'step' : 'false'); });
+  phasesEl.querySelectorAll('div').forEach((d, i) => d.classList.toggle('cur', step >= PHASES[i][1] && step <= PHASES[i][2]));
+  wlEl.textContent = (step === 11 ? 'Mark: ' : '') + WL[U.u];
+  wline.visible = step >= 11; wline.material = step >= 12 ? wSolid : wDash;
+  document.querySelectorAll('#steps li').forEach((li, i) => li.classList.toggle('cur', i === step));
+  if (sel && !sel.parent.visible) select(null);
+}
+function setStep(s) { step = Math.max(0, Math.min(12, s)); sync(); }
+function select(m) {
+  if (sel && sel.userData.edge) sel.userData.edge.material = edgeMat;
+  sel = m;
+  const n = document.getElementById('pName'), meta = document.getElementById('pMeta');
+  document.getElementById('card').hidden = !m;
+  if (!m) return;
+  if (m.userData.edge) m.userData.edge.material = selMat;
+  const inf = m.userData.info;
+  n.textContent = inf.name;
+  meta.textContent = `· step ${inf.step} · ${U.u === 'm' ? inf.m : inf.i}`;
+}
+function tables() {
+  const u = U.u;
+  ticksEl.innerHTML = STEPS.map((s, i) => `<button data-s="${i}" class="${i === 12 ? 'w' : ''}" title="${esc(s.t[u === 'm' ? 0 : 1])}" aria-label="Step ${i}: ${esc(s.t[u === 'm' ? 0 : 1])}">${i}</button>`).join('');
+  document.getElementById('steps').innerHTML = STEPS.map((s, i) => `<li data-s="${i}"><span>${i}</span>${esc(s.t[u === 'm' ? 0 : 1])}</li>`).join('');
+  const c = CUT[u];
+  document.getElementById('cut').innerHTML = `<tr>${c.h.map(h => `<th>${h}</th>`).join('')}</tr>` + c.r.map(r => `<tr><td>${r[0]}</td><td class="n">${esc(r[1])}</td><td class="n">${r[2]}</td><td>${esc(r[3])}</td></tr>`).join('');
+  document.getElementById('asm').innerHTML = `<tr><th>Assembly</th><th>Piece order</th><th>Length</th></tr>` + ASM[u].map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td class="n">${esc(r[2])}</td></tr>`).join('');
+  document.getElementById('netline').textContent = NET[u];
+  document.getElementById('mat').innerHTML = `<tr><th>Material</th><th>Qty</th></tr>` + MAT[u].map(r => `<tr${r[2] ? ' class="new"' : ''}><td>${esc(r[0])}</td><td class="n">${esc(r[1])}</td></tr>`).join('');
+  sync(); select(sel);
+}
+
+// ---------------------------------------------------------------- camera presets
+const CAMS = {overview:[[640, 520, 760], [0, 0, 0]], corner:[[-280, 70, -120], [-360, 6, -210]], section:[[-318, 20, 58], [-358, 8, 0]]};
+let fly = null;
+function goCam(k) {
+  let [p, t] = CAMS[k];
+  if (k === 'overview' && camera.aspect < 1.2) p = p.map(v => v * (2.1 - camera.aspect * 0.6));
+  document.querySelectorAll('[data-cam]').forEach(b => b.classList.toggle('on', b.dataset.cam === k));
+  fly = {p0:camera.position.clone(), t0:controls.target.clone(), p1:new THREE.Vector3(...p), t1:new THREE.Vector3(...t), k:0};
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) fly.k = 0.999;
+}
+camera.position.set(...CAMS.overview[0]); controls.target.set(...CAMS.overview[1]); requestAnimationFrame(() => { if (camera.aspect < 1.2) { goCam('overview'); fly.k = 0.999; } });
+
+// ---------------------------------------------------------------- events
+ticksEl.onclick = e => { const b = e.target.closest('button'); if (b) setStep(+b.dataset.s); };
+document.getElementById('steps').onclick = e => { const li = e.target.closest('li'); if (li) setStep(+li.dataset.s); };
+const tog = (id, fn) => { const b = document.getElementById(id); b.onclick = () => { const v = fn(); b.classList.toggle('on', v); b.setAttribute('aria-pressed', v); }; };
+tog('bExplode', () => (exploded = !exploded));
+tog('bSection', () => { section = !section; renderer.clippingPlanes = section ? [clip] : []; secFaces.forEach(f => f.visible = section); if (section) goCam('section'); return section; });
+tog('bDatum', () => { showDatum = !showDatum; sync(); return showDatum; });
+document.querySelectorAll('[data-cam]').forEach(b => b.onclick = () => goCam(b.dataset.cam));
+document.querySelectorAll('input[name=u]').forEach(r => r.onchange = () => { U.u = r.value; try { localStorage.setItem('poolUnits', U.u); } catch (e) {} tables(); });
+document.addEventListener('keydown', e => { if (e.target.tagName === 'INPUT') return; if (e.key === 'ArrowRight') setStep(step + 1); if (e.key === 'ArrowLeft') setStep(step - 1); });
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2(); let down = null;
+renderer.domElement.addEventListener('pointerdown', e => down = [e.clientX, e.clientY]);
+renderer.domElement.addEventListener('pointerup', e => {
+  if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
+  const r = renderer.domElement.getBoundingClientRect();
+  ptr.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  let hits = ray.intersectObjects(pickables.filter(m => m.parent.visible), false);
+  if (section) hits = hits.filter(h => h.point.z <= 0.01);
+  select(hits.length ? hits[0].object : null);
+});
+
+// theme
+function theme() {
+  const dark = document.documentElement.dataset.theme === 'dark' || (!document.documentElement.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
+  floor.material.opacity = dark ? 0.3 : 0.1;
+  grid.material.opacity = 0;
+}
+new MutationObserver(theme).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', theme);
+
+function resize() {
+  const w = host.clientWidth, h = host.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h;
+  if (w > 980) camera.setViewOffset(w, h, 0, 90, w, h); else camera.setViewOffset(w, h, 0, -Math.round(h * 0.12), w, h);
+  camera.updateProjectionMatrix();
+}
+const ro = new ResizeObserver(resize); ro.observe(host);
+
+const tmp = new THREE.Vector3();
+function loop() {
+  requestAnimationFrame(loop);
+  groups.forEach(g => {
+    const k = exploded ? 1 : 0, ex = g.userData.ex, out = g.userData.out || 0;
+    tmp.set(ex[0] * k, ex[1] * k, ex[2] * k);
+    g.position.lerp(tmp, 0.12);
+    // push wall groups outward in exploded view by scaling around centre via child offsets
+    g.children.forEach(m => {
+      if (m.userData.home === undefined) m.userData.home = m.position.clone();
+      const h = m.userData.home, dir = new THREE.Vector3();
+      if (out) { if (Math.abs(h.z) > HW && Math.abs(h.x) < HL + 20) dir.z = Math.sign(h.z); else if (Math.abs(h.x) > HL) dir.x = Math.sign(h.x); }
+      tmp.copy(h).addScaledVector(dir, out * k);
+      m.position.lerp(tmp, 0.12);
+    });
+  });
+  if (fly) { fly.k = Math.min(1, fly.k + 0.04); const e = 1 - Math.pow(1 - fly.k, 3); camera.position.lerpVectors(fly.p0, fly.p1, e); controls.target.lerpVectors(fly.t0, fly.t1, e); if (fly.k >= 1) fly = null; }
+  controls.update();
+  const showWl = step >= 11 && !exploded;
+  if (showWl) {
+    prj.copy(wlPt).project(camera);
+    const vis = prj.z < 1 && Math.abs(prj.x) < 0.95 && Math.abs(prj.y) < 0.95;
+    wlEl.hidden = !vis;
+    if (vis && host.clientWidth < 980 && (1 - prj.y) / 2 * host.clientHeight < 200) wlEl.hidden = true;
+    if (vis) { const hw = wlEl.offsetWidth / 2 + 8; wlEl.style.left = Math.min(host.clientWidth - hw, Math.max(hw, (prj.x + 1) / 2 * host.clientWidth)) + 'px'; wlEl.style.top = (1 - prj.y) / 2 * host.clientHeight + 'px'; }
+  } else wlEl.hidden = true;
+  renderer.render(scene, camera);
+}
+try { const s = localStorage.getItem('poolUnits'); if (s === 'i' || s === 'm') { U.u = s; document.querySelector(`input[name=u][value=${s}]`).checked = true; } } catch (e) {}
+theme(); resize(); tables(); loop();
+}
+</script>
+</body></html>
